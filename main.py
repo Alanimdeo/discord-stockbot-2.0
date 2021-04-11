@@ -97,7 +97,7 @@ async def 주식(ctx, *content):
             if code == None:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[0]))
             else:
-                await ctx.send(embed=discord.Embed(color=0x0090ff, title=":chart_with_upwards_trend: %s(%s)의 현재 주가" % (name, code), description="`%s원`" % format(int(price), ',')).set_image(url='https://ssl.pstatic.net/imgfinance/chart/item/area/day/%s.png?sidcode=%s' % (code, int(time.time() * 1000))).set_footer(text='차트 제공: 네이버 금융')
+                await ctx.send(embed=discord.Embed(color=0x0090ff, title=":chart_with_upwards_trend: %s(%s)의 현재 주가" % (name, code), description="`%s원`" % format(int(price), ',')).set_image(url='https://ssl.pstatic.net/imgfinance/chart/item/area/day/%s.png?sidcode=%s' % (code, int(time.time() * 1000))).set_footer(text='차트 제공: 네이버 금융'))
 
 @client.command(aliases=['한강물', 'ㅎㄱ', 'ㅎㄱㅁ', 'gksrkd', 'gksrkdanf', 'gr', 'gra'])
 async def 한강(ctx, *content):
