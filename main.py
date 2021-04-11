@@ -40,6 +40,8 @@ def getNowPrice(name, df):
         elif datetime.today().weekday() == 6:
             day += -2
         elif datetime.today().hour < 9:
+            if datetime.today().weekday() == 0:
+                day += -2
             day += -1
         if day < 1:
             month += -1
