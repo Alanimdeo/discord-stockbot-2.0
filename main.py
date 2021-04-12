@@ -205,6 +205,7 @@ async def sendMoney2(ctx, content, targetUser):
 
 async def buyStock(ctx, content):
     success = False
+    buyAmount = ''
     try:
         int(content[2])
     except ValueError:
@@ -243,6 +244,7 @@ async def buyStock(ctx, content):
                 await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 구매 완료', description='%s(%s) 주식을 구매했습니다.\n구매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[2]), ','), format(int(price) * int(content[2]), ','), format(userdata[str(ctx.author.id)]['stock'][code]['amount'], ','), format(userdata[str(ctx.author.id)]['money'], ','))))
 
 async def sellStock(ctx, content):
+    sellAmount = ''
     try:
         int(content[2])
     except ValueError:
