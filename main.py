@@ -216,8 +216,8 @@ async def buyStock(ctx, content):
         buyAmount = content[2]
     finally:
         try:
-            buyPrice = int(buyAmount) * price
             [name, code, price] = getNowPrice(content[1], corpList)
+            buyPrice = int(buyAmount) * price
             if code == None:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[1]))
             elif buyPrice <= 0:
