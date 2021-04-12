@@ -242,32 +242,32 @@ async def buyStock(ctx, content):
 
 async def sellStock(ctx, content):
     try:
-        int(content[3])
+        int(content[2])
     except ValueError:
-        if content[3] in selectAllCommand:
-            code = getNowPrice(content[2], corpList)[1]
-            content[3] = userdata[str(ctx.author.id)]['stock'][code]['amount']
+        if content[2] in selectAllCommand:
+            code = getNowPrice(content[1], corpList)[1]
+            content[2] = userdata[str(ctx.author.id)]['stock'][code]['amount']
     finally:
         try:
-            int(content[3])
-            [name, code, price] = getNowPrice(content[2], corpList)
+            int(content[2])
+            [name, code, price] = getNowPrice(content[1], corpList)
             if code == None:
-                await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[2]))
-            elif userdata[str(ctx.author.id)]['stock'][code]['amount'] < int(content[3]):
+                await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[1]))
+            elif userdata[str(ctx.author.id)]['stock'][code]['amount'] < int(content[2]):
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='가진 주식보다 많이 판매할 수 없습니다.'))
-            elif int(content[3]) <= 0:
+            elif int(content[2]) <= 0:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='수량은 0보다 커야 합니다.'))
             else:
-                userdata[str(ctx.author.id)]['stock'][code]['amount'] += -int(content[3])
-                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += -(int(content[3]) * price)
+                userdata[str(ctx.author.id)]['stock'][code]['amount'] += -int(content[2])
+                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += -(int(content[2]) * price)
                 amount = userdata[str(ctx.author.id)]['stock'][code]['amount']
                 if userdata[str(ctx.author.id)]['stock'][code]['amount'] == 0:
                     del userdata[str(ctx.author.id)]['stock'][code]
                     amount = 0
-                userdata[str(ctx.author.id)]['money'] += int(content[3]) * price
+                userdata[str(ctx.author.id)]['money'] += int(content[2]) * price
                 with open('./userdata.json', 'w') as json_file:
                     json.dump(userdata, json_file, indent=4)
-                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 판매 완료', description='%s(%s) 주식을 판매했습니다.\n판매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[3]), ','), format(int(price) * int(content[3]), ','), format(amount, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
+                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 판매 완료', description='%s(%s) 주식을 판매했습니다.\n판매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[2]), ','), format(int(price) * int(content[2]), ','), format(amount, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
         except KeyError:
             await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s(%s)의 주식을 가지고 있지 않습니다.' % (name, code)))
         except ValueError as e:
