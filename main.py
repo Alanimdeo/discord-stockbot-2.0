@@ -109,7 +109,6 @@ async def 한강(ctx, *content):
 @client.command()
 async def admin(ctx, *content):
     if ctx.author.id == 324101597368156161 or ctx.author.id == 828515050640637973:
-        try:
             if content[0] == 'setMoney':
                 userdata[content[1]]['money'] = int(content[2])
             elif content[0] == 'addMoney':
@@ -118,9 +117,6 @@ async def admin(ctx, *content):
                 await myStock(ctx, content[1], corpList)
             elif content[0] == 'showMoney':
                 await showMoney(ctx, content[1])
-        except:
-            pass
-        finally:
             with open('./userdata.json', 'w') as json_file:
                 json.dump(userdata, json_file, indent=4)
     else:
@@ -165,6 +161,8 @@ async def myStock(ctx, userID, df):
         willSendMessage = ':information_source: %s 님의 주식 상태입니다.\n' % ctx.author.display_name
         for i in range(len(userdata[userID]['stock'])):
             [name, code, price] = getNowPrice(stock[i], corpList)
+            if price == None:
+                continue
             if stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
                 willSendMessage += '```diff\n- %s(%s): %s주 (%s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['amount'] * price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
