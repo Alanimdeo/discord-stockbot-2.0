@@ -205,32 +205,35 @@ async def sendMoney2(ctx, content, targetUser):
 
 async def buyStock(ctx, content):
     success = False
+    buyAmount = ''
     try:
-        int(content[3])
+        int(content[2])
     except ValueError:
-        if content[3] in selectAllCommand:
-            [name, code, price] = getNowPrice(content[2], corpList)
-            content[3] = math.floor(userdata[str(ctx.author.id)]['money'] / price)
+        if content[2] in selectAllCommand:
+            [name, code, price] = getNowPrice(content[1], corpList)
+            buyAmount = math.floor(userdata[str(ctx.author.id)]['money'] / price)
+    else:
+        buyAmount = content[2]
     finally:
         try:
-            [name, code, price] = getNowPrice(content[2], corpList)
-            buyPrice = int(content[3]) * price
+            [name, code, price] = getNowPrice(content[1], corpList)
+            buyPrice = int(buyAmount) * price
             if code == None:
-                await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[2]))
+                await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[1]))
             elif buyPrice <= 0:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='수량은 0보다 커야 합니다.'))
             elif userdata[str(ctx.author.id)]['money'] < buyPrice:
                 await ctx.send(embed=discord.Embed(color=0xffff00, title=':moneybag: 잔액 부족', description='가진 돈이 부족합니다.'))
             else:
                 userdata[str(ctx.author.id)]['money'] += -buyPrice
-                userdata[str(ctx.author.id)]['stock'][code]['amount'] += int(content[3])
+                userdata[str(ctx.author.id)]['stock'][code]['amount'] += int(buyAmount)
                 userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += buyPrice
                 success = True
         except ValueError:
             await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='수량에는 숫자 또는 전부만 입력하세요.\n형식: `%s주식 구매 <기업명/종목코드> <수량/전부>`' % config['prefix']))
         except KeyError:
             userdata[str(ctx.author.id)]['stock'][code] = {
-                'amount': int(content[3]),
+                'amount': int(buyAmount),
                 'buyPrice': buyPrice
             }
             success = True
@@ -238,33 +241,36 @@ async def buyStock(ctx, content):
             if success == True:
                 with open('./userdata.json', 'w') as json_file:
                     json.dump(userdata, json_file, indent=4)
-                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 구매 완료', description='%s(%s) 주식을 구매했습니다.\n구매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[3]), ','), format(int(price) * int(content[3]), ','), format(userdata[str(ctx.author.id)]['stock'][code]['amount'], ','), format(userdata[str(ctx.author.id)]['money'], ','))))
+                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 구매 완료', description='%s(%s) 주식을 구매했습니다.\n구매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[2]), ','), format(int(price) * int(content[2]), ','), format(userdata[str(ctx.author.id)]['stock'][code]['amount'], ','), format(userdata[str(ctx.author.id)]['money'], ','))))
 
 async def sellStock(ctx, content):
+    sellAmount = ''
     try:
         int(content[2])
     except ValueError:
         if content[2] in selectAllCommand:
             code = getNowPrice(content[1], corpList)[1]
-            content[2] = userdata[str(ctx.author.id)]['stock'][code]['amount']
+            sellAmount = userdata[str(ctx.author.id)]['stock'][code]['amount']
+    else:
+        sellAmount = content[2]
     finally:
         try:
-            int(content[2])
+            int(sellAmount)
             [name, code, price] = getNowPrice(content[1], corpList)
             if code == None:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[1]))
-            elif userdata[str(ctx.author.id)]['stock'][code]['amount'] < int(content[2]):
+            elif userdata[str(ctx.author.id)]['stock'][code]['amount'] < int(sellAmount):
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='가진 주식보다 많이 판매할 수 없습니다.'))
-            elif int(content[2]) <= 0:
+            elif int(sellAmount) <= 0:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='수량은 0보다 커야 합니다.'))
             else:
-                userdata[str(ctx.author.id)]['stock'][code]['amount'] += -int(content[2])
-                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += -(int(content[2]) * price)
+                userdata[str(ctx.author.id)]['stock'][code]['amount'] += -int(sellAmount)
+                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += -(int(sellAmount) * price)
                 amount = userdata[str(ctx.author.id)]['stock'][code]['amount']
                 if userdata[str(ctx.author.id)]['stock'][code]['amount'] == 0:
                     del userdata[str(ctx.author.id)]['stock'][code]
                     amount = 0
-                userdata[str(ctx.author.id)]['money'] += int(content[2]) * price
+                userdata[str(ctx.author.id)]['money'] += int(sellAmount) * price
                 with open('./userdata.json', 'w') as json_file:
                     json.dump(userdata, json_file, indent=4)
                 await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 판매 완료', description='%s(%s) 주식을 판매했습니다.\n판매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[2]), ','), format(int(price) * int(content[2]), ','), format(amount, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
