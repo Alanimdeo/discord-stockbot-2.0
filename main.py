@@ -216,7 +216,6 @@ async def buyStock(ctx, content):
     finally:
         try:
             [name, code, price] = getNowPrice(content[1], corpList)
-            buyPrice = int(buyAmount) * price
             if code == None:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[1]))
             elif buyPrice <= 0:
@@ -224,6 +223,7 @@ async def buyStock(ctx, content):
             elif userdata[str(ctx.author.id)]['money'] < buyPrice:
                 await ctx.send(embed=discord.Embed(color=0xffff00, title=':moneybag: 잔액 부족', description='가진 돈이 부족합니다.'))
             else:
+                buyPrice = int(buyAmount) * price
                 userdata[str(ctx.author.id)]['money'] += -buyPrice
                 userdata[str(ctx.author.id)]['stock'][code]['amount'] += int(buyAmount)
                 userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += buyPrice
