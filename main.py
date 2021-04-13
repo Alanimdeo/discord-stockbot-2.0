@@ -239,7 +239,7 @@ async def buyStock(ctx, content):
             if success == True:
                 with open('./userdata.json', 'w') as json_file:
                     json.dump(userdata, json_file, indent=4)
-                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 구매 완료', description='%s(%s) 주식을 구매했습니다.\n구매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[2]), ','), format(int(price) * int(content[2]), ','), format(userdata[str(ctx.author.id)]['stock'][code]['amount'], ','), format(userdata[str(ctx.author.id)]['money'], ','))))
+                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 구매 완료', description='%s(%s) 주식을 구매했습니다.\n구매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(buyAmount), ','), format(int(price) * int(buyAmount), ','), format(userdata[str(ctx.author.id)]['stock'][code]['amount'], ','), format(userdata[str(ctx.author.id)]['money'], ','))))
 
 async def sellStock(ctx, content):
     sellAmount = ''
@@ -253,7 +253,6 @@ async def sellStock(ctx, content):
         sellAmount = content[2]
     finally:
         try:
-            int(sellAmount)
             [name, code, price] = getNowPrice(content[1], corpList)
             if code == None:
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s 은(는) 존재하지 않는 기업입니다. 기업명을 올바르게 입력했는지, 대소문자를 구분하였는지 확인하세요.' % content[1]))
@@ -271,7 +270,7 @@ async def sellStock(ctx, content):
                 userdata[str(ctx.author.id)]['money'] += int(sellAmount) * price
                 with open('./userdata.json', 'w') as json_file:
                     json.dump(userdata, json_file, indent=4)
-                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 판매 완료', description='%s(%s) 주식을 판매했습니다.\n판매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(content[2]), ','), format(int(price) * int(content[2]), ','), format(amount, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
+                await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 판매 완료', description='%s(%s) 주식을 판매했습니다.\n판매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(sellAmount), ','), format(int(price) * int(sellAmount), ','), format(amount, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
         except KeyError:
             await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='%s(%s)의 주식을 가지고 있지 않습니다.' % (name, code)))
         except ValueError as e:
