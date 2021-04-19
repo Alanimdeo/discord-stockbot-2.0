@@ -164,11 +164,11 @@ async def myStock(ctx, userID, df):
             if price == None:
                 continue
             if stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 합계 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(stockValue[i]['amount'] * price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
+                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 합계 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(stockValue[i]['amount'] * price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
+                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
             else:
-                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 합계 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(stockValue[i]['amount'] * price, ','))     
+                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','))     
         await ctx.send(willSendMessage)
 
 async def sendMoney(ctx, content):
