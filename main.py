@@ -118,9 +118,9 @@ async def admin(ctx, *content):
             elif content[0] == 'showMoney':
                 await showMoney(ctx, content[1])
             elif content[0] == 'addStock':
-                userdata[content[1]]['stock'][content[2]] += int(content[3])
+                userdata[content[1]]['stock'][content[2]]['amount'] += int(content[3])
             elif content[0] == 'setStock':
-                userdata[content[1]]['stock'][content[2]] = int(content[3])
+                userdata[content[1]]['stock'][content[2]]['amount'] = int(content[3])
             with open('./userdata.json', 'w') as json_file:
                 json.dump(userdata, json_file, indent=4)
     else:
