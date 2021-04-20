@@ -117,6 +117,10 @@ async def admin(ctx, *content):
                 await myStock(ctx, content[1], corpList)
             elif content[0] == 'showMoney':
                 await showMoney(ctx, content[1])
+            elif content[0] == 'addStock':
+                userdata[content[1]]['stock'][content[2]] += int(content[3])
+            elif content[0] == 'setStock':
+                userdata[content[1]]['stock'][content[2]] = int(content[3])
             with open('./userdata.json', 'w') as json_file:
                 json.dump(userdata, json_file, indent=4)
     else:
@@ -168,7 +172,7 @@ async def myStock(ctx, userID, df):
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
                 willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
             else:
-                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','))     
+                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ','), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','))
         await ctx.send(willSendMessage)
 
 async def sendMoney(ctx, content):
