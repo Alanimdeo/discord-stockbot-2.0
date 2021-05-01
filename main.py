@@ -56,7 +56,6 @@ def getNowPrice(name, df):
             month = 12
             year += -1
             day = 31
-        
         now = str(year) + str(month).zfill(2) + str(day).zfill(2) + "235959"
         request = requests.get('https://finance.naver.com/item/sise_time.nhn?code=' + code + '&thistime=' + now, headers={'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'})
         soup = BeautifulSoup(request.text, 'html.parser')
@@ -164,8 +163,9 @@ async def showMoney(ctx, userID):
     stockValue = list(userdata[userID]['stock'].values())
     money = 0
     for i in range(len(userdata[userID]['stock'])):
-        price = int(getNowPrice(stock[i], corpList)[2])
-        money += price * stockValue[i]['amount']
+        price = getNowPrice(stock[i], corpList)[2]
+        if price != None:
+            money += int(price) * stockValue[i]['amount']
     await ctx.send(embed=discord.Embed(color=0xffff00, title=':moneybag: %s 님의 돈' % ctx.author.display_name, description='현금: `%s원`\n주식: `%s원`\n주식 포함 금액: `%s원`' % (format(userdata[userID]['money'], ','), format(money, ','), format(userdata[userID]['money'] + money, ','))))
 
 async def myStock(ctx, userID, df):
