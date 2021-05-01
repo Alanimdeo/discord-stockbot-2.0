@@ -33,6 +33,7 @@ def getNowPrice(name, df):
         code = code.zfill(6)
         name = str(df[df.종목코드 == int(code.lstrip("0"))].회사명.values)[2:-2]
     finally:
+        year = datetime.today().year
         day = datetime.today().day
         month = datetime.today().month
         if datetime.today().weekday() == 5:
@@ -45,7 +46,18 @@ def getNowPrice(name, df):
             day += -1
         if day < 1:
             month += -1
-        now = str(datetime.today().year) + str(month).zfill(2) + str(day).zfill(2) + "235959"
+            if month in [1, 3, 5, 7, 8, 10, 12]:
+                day = 31
+            elif month in [4, 6, 9, 11]:
+                day = 30
+            elif month == 2:
+                day = 29
+        if month == 0:
+            month = 12
+            year += -1
+            day = 31
+        
+        now = str(year) + str(month).zfill(2) + str(day).zfill(2) + "235959"
         request = requests.get('https://finance.naver.com/item/sise_time.nhn?code=' + code + '&thistime=' + now, headers={'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'})
         soup = BeautifulSoup(request.text, 'html.parser')
         price = soup.find('span',class_='tah p11')
