@@ -178,8 +178,8 @@ async def myStock(ctx, userID, df):
         for i in range(len(userdata[userID]['stock'])):
             [name, code, price] = getNowPrice(stock[i], corpList)
             if price == None:
-                continue
-            if stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
+                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','))
+            elif stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
                 willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
                 willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ','), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
