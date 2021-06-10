@@ -8,6 +8,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, CheckFailure, CommandNotFound
+from discord.utils import get
 import json
 import math
 import pandas as pd
@@ -159,6 +160,7 @@ async def sendAlreadyRegisteredMessage(ctx):
     await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='이미 가입돼 있습니다.'))
 
 async def showMoney(ctx, userID):
+    user = await ctx.message.guild.fetch_member(int(userID))
     stock = list(userdata[userID]['stock'].keys())
     stockValue = list(userdata[userID]['stock'].values())
     money = 0
@@ -166,25 +168,26 @@ async def showMoney(ctx, userID):
         price = getNowPrice(stock[i], corpList)[2]
         if price != None:
             money += int(price) * stockValue[i]['amount']
-    await ctx.send(embed=discord.Embed(color=0xffff00, title=':moneybag: %s 님의 돈' % ctx.author.display_name, description='현금: `%s원`\n주식: `%s원`\n주식 포함 금액: `%s원`' % (format(userdata[userID]['money'], ','), format(money, ','), format(userdata[userID]['money'] + money, ','))))
+    await ctx.send(embed=discord.Embed(color=0xffff00, title=':moneybag: %s 님의 돈' % user.display_name, description='현금: `%s원`\n주식: `%s원`\n주식 포함 금액: `%s원`' % (format(userdata[userID]['money'], ','), format(money, ','), format(userdata[userID]['money'] + money, ','))))
 
 async def myStock(ctx, userID, df):
+    user = await ctx.message.guild.fetch_member(int(userID))
     stock = list(userdata[userID]['stock'].keys())
     stockValue = list(userdata[userID]['stock'].values())
     if len(stock) == 0:
         await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='보유한 주식이 없습니다.'))
     else:
-        willSendMessage = ':information_source: %s 님의 주식 상태입니다.\n' % ctx.author.display_name
+        willSendMessage = ':information_source: %s 님의 주식 상태입니다.\n' % user.display_name
         for i in range(len(userdata[userID]['stock'])):
             [name, code, price] = getNowPrice(stock[i], corpList)
             if price == None:
-                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ',').replace('.0', ''))
+                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''))
             elif stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
+                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
+                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
             else:
-                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(stockValue[i]['buyPrice'] / stockValue[i]['amount'], ',').replace('.0', ''), format(price, ','))
+                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','))
         await ctx.send(willSendMessage)
 
 async def sendMoney(ctx, content):
@@ -211,11 +214,12 @@ async def sendMoney(ctx, content):
             await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='잘못된 양식입니다.\n양식: `%s돈 송금 <보낼 사람(멘션)> <액수>`' % prefix))
 
 async def sendMoney2(ctx, content, targetUser):
+    user = await ctx.message.guild.fetch_member(int(targetUser))
     userdata[str(ctx.author.id)]['money'] += -int(content[2])
     userdata[targetUser]['money'] += int(content[2])
     with open('./userdata.json', 'w') as json_file:
         json.dump(userdata, json_file, indent=4)
-    await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 송금 완료', description='송금을 완료했습니다.\n송금 후 잔액: `%s원`' % userdata[str(ctx.author.id)]['money']))
+    await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 송금 완료', description='%s 님께 송금을 완료했습니다.\n송금 후 잔액: `%s원`' % (user.display_name, userdata[str(ctx.author.id)]['money'])))
 
 async def buyStock(ctx, content):
     success = False
