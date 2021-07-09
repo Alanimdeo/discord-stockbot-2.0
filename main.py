@@ -137,7 +137,6 @@ async def 돈받기(ctx):
             json.dump(userdata, json_file, indent=4)
     else:
         timegap = time.gmtime(86340 - int(time.time()) + userdata[str(ctx.author.id)]['lastClaim'])
-        print(timegap)
         if timegap.tm_hour == 0:
             timelabel = '%s분' % timegap.tm_min
         else:
