@@ -14,6 +14,7 @@ import math
 import pandas as pd
 import requests
 import time
+import random
 
 with open('./userdata.json', 'r') as json_file:
     userdata = json.load(json_file)
@@ -24,6 +25,7 @@ with open('./config.json', "r") as json_file:
 
 client = commands.Bot(command_prefix=prefix)
 client.remove_command('help')
+
 
 def getNowPrice(name, df):
     try:
@@ -58,14 +60,18 @@ def getNowPrice(name, df):
             year += -1
             day = 31
         now = str(year) + str(month).zfill(2) + str(day).zfill(2) + "235959"
-        request = requests.get('https://finance.naver.com/item/sise_time.nhn?code=' + code + '&thistime=' + now, headers={'User-Agent' : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'})
+        request = requests.get('https://finance.naver.com/item/sise_time.nhn?code=' + code + '&thistime=' + now, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
+        })
         soup = BeautifulSoup(request.text, 'html.parser')
-        price = soup.find('span',class_='tah p11')
+        price = soup.find('span', class_='tah p11')
         if price == None:
             code = None
         else:
-            price = int(str(price).replace('<span class="tah p11">','').replace('</span>','').replace(',',''))
+            price = int(str(price).replace('<span class="tah p11">',
+                        '').replace('</span>', '').replace(',', ''))
         return name, code, price
+
 
 sendMoneyCommand = ['보내기', '송금', 'ㅅㄱ', 'tr', 'send']
 myStockCommand = ['내주식', '내', 'ㄵㅅ', 'ㄴㅈㅅ', 'ㄴ', 'swt', 's', 'my']
@@ -73,25 +79,25 @@ sellStockCommand = ['판매', 'ㅍㅁ', 'sell', 'va']
 buyStockCommand = ['구매', 'ㄱㅁ', 'buy', 'ra']
 selectAllCommand = ['전부', '모두', 'ㅈㅂ', 'ㅁㄷ', 'all', 'wq', 'ae']
 
-@client.command() # test command
-async def test(ctx, *content):
-    print(type(ctx.author.id))
 
 @client.command(aliases=['도움', '명령어', '커맨드', 'help', 'command', 'commands'])
 async def 도움말(ctx, *content):
     await ctx.send(embed=discord.Embed(color=0x0067a3, title=':information_source: 도움말 확인', description='자세한 설명은 [이곳](<https://stockbot.alan.imdeo.kr/>)에서 보실 수 있습니다.'))
 
+
 @client.command(aliases=['ㄱㅇ', 'join', 'register'])
 async def 가입(ctx, *content):
     await checkUser(ctx, lambda: sendAlreadyRegisteredMessage(ctx), lambda: register(ctx))
+
 
 @client.command(aliases=['ㄷ', 'ehs', 'e', 'money'])
 async def 돈(ctx, *content):
     try:
         if content[0] in sendMoneyCommand:
-            await checkUser(ctx, lambda: sendMoney(ctx, content), None)
+            await checkUser(ctx, lambda: sendMoney(ctx, content))
     except IndexError:
-        await checkUser(ctx, lambda: showMoney(ctx, str(ctx.author.id)), None)
+        await checkUser(ctx, lambda: showMoney(ctx, str(ctx.author.id)))
+
 
 @client.command(aliases=['ㅈㅅ', 'wntlr', 'wt', 'stock'])
 async def 주식(ctx, *content):
@@ -101,11 +107,11 @@ async def 주식(ctx, *content):
         await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='값을 입력하세요.'))
     else:
         if content[0] in myStockCommand:
-            await checkUser(ctx, lambda: myStock(ctx, str(ctx.author.id), corpList), None)
+            await checkUser(ctx, lambda: myStock(ctx, str(ctx.author.id), corpList))
         elif content[0] in buyStockCommand:
-            await checkUser(ctx, lambda: buyStock(ctx, content), None)
+            await checkUser(ctx, lambda: buyStock(ctx, content))
         elif content[0] in sellStockCommand:
-            await checkUser(ctx, lambda: sellStock(ctx, content), None)
+            await checkUser(ctx, lambda: sellStock(ctx, content))
         else:
             [name, code, price] = getNowPrice(content[0], corpList)
             if code == None:
@@ -113,39 +119,65 @@ async def 주식(ctx, *content):
             else:
                 await ctx.send(embed=discord.Embed(color=0x0090ff, title=":chart_with_upwards_trend: %s(%s)의 현재 주가" % (name, code), description="`%s원`" % format(int(price), ',')).set_image(url='https://ssl.pstatic.net/imgfinance/chart/item/area/day/%s.png?sidcode=%s' % (code, int(time.time() * 1000))).set_footer(text='차트 제공: 네이버 금융'))
 
+
 @client.command(aliases=['한강물', 'ㅎㄱ', 'ㅎㄱㅁ', 'gksrkd', 'gksrkdanf', 'gr', 'gra'])
-async def 한강(ctx, *content):
+async def 한강(ctx):
     request = requests.get('http://hangang.dkserver.wo.tc')
     await ctx.send(embed=discord.Embed(color=0x0067a3, title=':ocean: 현재 한강 수온', description='현재 한강의 수온은 `%s ℃` 입니다.\n\n자살 예방 핫라인 :telephone: 1577-0199\n희망의 전화 :telephone: 129' % literal_eval(request.text[1:])['temp']))
+
+
+@client.command(aliases=['ㄷㅂㄱ', 'eqr', '용돈'])
+async def 돈받기(ctx):
+    if userdata[str(ctx.author.id)]['lastClaim'] + 86340 < time.time(): 
+        money = int(round(random.randrange(1000, 5001), -2))
+        userdata[str(ctx.author.id)]['money'] += money
+        userdata[str(ctx.author.id)]['lastClaim'] = int(time.time())
+        await ctx.send(embed=discord.Embed(color=0x008000, title=':money_with_wings: 오늘의 용돈', description='오늘 용돈으로 `%s원`을 받았습니다.\n 현재 잔액: `%s원`' % (money, userdata[str(ctx.author.id)]['money'])))
+        with open('./userdata.json', 'w') as json_file:
+            json.dump(userdata, json_file, indent=4)
+    else:
+        timegap = time.gmtime(86340 - int(time.time()) + userdata[str(ctx.author.id)]['lastClaim'])
+        print(timegap)
+        if timegap.tm_hour == 0:
+            timelabel = '%s분' % timegap.tm_min
+        else:
+            timelabel = '%s시간 %s분' % (timegap.tm_hour, timegap.tm_min)
+        await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='아직 용돈을 받을 수 없습니다. %s 후 다시 시도해보세요.' % timelabel))
+
 
 @client.command()
 async def admin(ctx, *content):
     if ctx.author.id == 324101597368156161 or ctx.author.id == 828515050640637973:
-            if content[0] == 'setMoney':
-                userdata[content[1]]['money'] = int(content[2])
-            elif content[0] == 'addMoney':
-                userdata[content[1]]['money'] += int(content[2])
-            elif content[0] == 'showStock':
-                await myStock(ctx, content[1], corpList)
-            elif content[0] == 'showMoney':
-                await showMoney(ctx, content[1])
-            elif content[0] == 'addStock':
-                userdata[content[1]]['stock'][content[2]]['amount'] += int(content[3])
-            elif content[0] == 'setStock':
-                userdata[content[1]]['stock'][content[2]]['amount'] = int(content[3])
-            with open('./userdata.json', 'w') as json_file:
-                json.dump(userdata, json_file, indent=4)
+        if content[0] == 'setMoney':
+            userdata[content[1]]['money'] = int(content[2])
+        elif content[0] == 'addMoney':
+            userdata[content[1]]['money'] += int(content[2])
+        elif content[0] == 'showStock':
+            await myStock(ctx, content[1], corpList)
+        elif content[0] == 'showMoney':
+            await showMoney(ctx, content[1])
+        elif content[0] == 'addStock':
+            userdata[content[1]]['stock'][content[2]]['amount'] += int(content[3])
+        elif content[0] == 'setStock':
+            userdata[content[1]]['stock'][content[2]]['amount'] = int(content[3])
+        elif content[0] == 'resetClaim':
+            userdata[content[1]]['lastClaim'] = 0
+
+        with open('./userdata.json', 'w') as json_file:
+            json.dump(userdata, json_file, indent=4)
     else:
         await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='운영자가 아닙니다.'))
 
+
 @client.event
-async def checkUser(ctx, ifRegistered, ifNotRegistered):
+async def checkUser(ctx, ifRegistered, ifNotRegistered=None):
     if str(ctx.author.id) in userdata:
         await ifRegistered()
     elif ifNotRegistered == None:
         await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 가입 필요', description='가입이 필요합니다. `%s가입`을 입력해 가입하세요.' % prefix))
     else:
         await ifNotRegistered()
+
 
 async def register(ctx):
     userdata[str(ctx.author.id)] = {
@@ -156,8 +188,10 @@ async def register(ctx):
         json.dump(userdata, json_file, indent=4)
     await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 가입 완료', description='가입이 완료되었습니다.'))
 
+
 async def sendAlreadyRegisteredMessage(ctx):
     await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='이미 가입돼 있습니다.'))
+
 
 async def showMoney(ctx, userID):
     user = await ctx.message.guild.fetch_member(int(userID))
@@ -170,6 +204,7 @@ async def showMoney(ctx, userID):
             money += int(price) * stockValue[i]['amount']
     await ctx.send(embed=discord.Embed(color=0xffff00, title=':moneybag: %s 님의 돈' % user.display_name, description='현금: `%s원`\n주식: `%s원`\n주식 포함 금액: `%s원`' % (format(userdata[userID]['money'], ','), format(money, ','), format(userdata[userID]['money'] + money, ','))))
 
+
 async def myStock(ctx, userID, df):
     user = await ctx.message.guild.fetch_member(int(userID))
     stock = list(userdata[userID]['stock'].keys())
@@ -181,19 +216,25 @@ async def myStock(ctx, userID, df):
         for i in range(len(userdata[userID]['stock'])):
             [name, code, price] = getNowPrice(stock[i], corpList)
             if price == None:
-                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''))
+                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''))
             elif stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
+                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
+                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
             else:
-                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','))
+                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','))
         await ctx.send(willSendMessage)
+
 
 async def sendMoney(ctx, content):
     error = False
     try:
-        targetUser = content[1].replace('<', '').replace('>', '').replace('@', '').replace('!', '')
+        targetUser = content[1].replace('<', '').replace(
+            '>', '').replace('@', '').replace('!', '')
         if len(targetUser) == 18:
             if userdata[str(ctx.author.id)]['money'] <= int(content[2]):
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='잔액이 부족합니다.'))
@@ -213,6 +254,7 @@ async def sendMoney(ctx, content):
         if error == True:
             await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='잘못된 양식입니다.\n양식: `%s돈 송금 <보낼 사람(멘션)> <액수>`' % prefix))
 
+
 async def sendMoney2(ctx, content, targetUser):
     user = await ctx.message.guild.fetch_member(int(targetUser))
     userdata[str(ctx.author.id)]['money'] += -int(content[2])
@@ -220,6 +262,7 @@ async def sendMoney2(ctx, content, targetUser):
     with open('./userdata.json', 'w') as json_file:
         json.dump(userdata, json_file, indent=4)
     await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 송금 완료', description='%s 님께 송금을 완료했습니다.\n송금 후 잔액: `%s원`' % (user.display_name, userdata[str(ctx.author.id)]['money'])))
+
 
 async def buyStock(ctx, content):
     success = False
@@ -229,7 +272,8 @@ async def buyStock(ctx, content):
     except ValueError:
         if content[2] in selectAllCommand:
             [name, code, price] = getNowPrice(content[1], corpList)
-            buyAmount = math.floor(userdata[str(ctx.author.id)]['money'] / price)
+            buyAmount = math.floor(
+                userdata[str(ctx.author.id)]['money'] / price)
     else:
         buyAmount = content[2]
     finally:
@@ -261,6 +305,7 @@ async def buyStock(ctx, content):
                     json.dump(userdata, json_file, indent=4)
                 await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 구매 완료', description='%s(%s) 주식을 구매했습니다.\n구매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(buyAmount), ','), format(int(price) * int(buyAmount), ','), format(userdata[str(ctx.author.id)]['stock'][code]['amount'], ','), format(userdata[str(ctx.author.id)]['money'], ','))))
 
+
 async def sellStock(ctx, content):
     sellAmount = ''
     try:
@@ -282,12 +327,14 @@ async def sellStock(ctx, content):
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='수량은 0보다 커야 합니다.'))
             else:
                 userdata[str(ctx.author.id)]['stock'][code]['amount'] += -int(sellAmount)
-                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += -(int(sellAmount) * price)
+                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += - \
+                    (int(sellAmount) * price)
                 amount = userdata[str(ctx.author.id)]['stock'][code]['amount']
                 if userdata[str(ctx.author.id)]['stock'][code]['amount'] == 0:
                     del userdata[str(ctx.author.id)]['stock'][code]
                     amount = 0
-                userdata[str(ctx.author.id)]['money'] += int(sellAmount) * price
+                userdata[str(ctx.author.id)
+                         ]['money'] += int(sellAmount) * price
                 with open('./userdata.json', 'w') as json_file:
                     json.dump(userdata, json_file, indent=4)
                 await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 판매 완료', description='%s(%s) 주식을 판매했습니다.\n판매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(sellAmount), ','), format(int(price) * int(sellAmount), ','), format(amount, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
@@ -300,6 +347,7 @@ async def sellStock(ctx, content):
             await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='값을 입력하세요.\n형식: `%s주식 판매 <기업명/종목코드> <수량/전부>`' % config['prefix']))
 
 # Initialize
-corpList = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0][['회사명', '종목코드']]
+corpList = pd.read_html(
+    'http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0][['회사명', '종목코드']]
 print('I\'m ready!\nToken: ' + config['token'])
 client.run(config['token'])
