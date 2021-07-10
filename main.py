@@ -210,20 +210,25 @@ async def myStock(ctx, userID, df):
         for i in range(len(userdata[userID]['stock'])):
             [name, code, price] = getNowPrice(stock[i], corpList)
             if price == None:
-                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''))
+                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''))
             elif stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
+                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
+                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
             else:
-                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','))
+                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace(
+                    '.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','))
         await ctx.send(willSendMessage)
 
 
 async def sendMoney(ctx, content):
     error = False
     try:
-        targetUser = content[1].replace('<', '').replace('>', '').replace('@', '').replace('!', '')
+        targetUser = content[1].replace('<', '').replace(
+            '>', '').replace('@', '').replace('!', '')
         if len(targetUser) == 18:
             if userdata[str(ctx.author.id)]['money'] <= int(content[2]):
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='잔액이 부족합니다.'))
@@ -261,7 +266,8 @@ async def buyStock(ctx, content):
     except ValueError:
         if content[2] in selectAllCommand:
             [name, code, price] = getNowPrice(content[1], corpList)
-            buyAmount = math.floor(userdata[str(ctx.author.id)]['money'] / price)
+            buyAmount = math.floor(
+                userdata[str(ctx.author.id)]['money'] / price)
     else:
         buyAmount = content[2]
     finally:
@@ -315,12 +321,14 @@ async def sellStock(ctx, content):
                 await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='수량은 0보다 커야 합니다.'))
             else:
                 userdata[str(ctx.author.id)]['stock'][code]['amount'] += -int(sellAmount)
-                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += -(int(sellAmount) * price)
+                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += - \
+                    (int(sellAmount) * price)
                 amount = userdata[str(ctx.author.id)]['stock'][code]['amount']
                 if userdata[str(ctx.author.id)]['stock'][code]['amount'] == 0:
                     del userdata[str(ctx.author.id)]['stock'][code]
                     amount = 0
-                userdata[str(ctx.author.id)]['money'] += int(sellAmount) * price
+                userdata[str(ctx.author.id)
+                         ]['money'] += int(sellAmount) * price
                 with open('./userdata.json', 'w') as json_file:
                     json.dump(userdata, json_file, indent=4)
                 await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 판매 완료', description='%s(%s) 주식을 판매했습니다.\n판매 금액: `%s × %s = %s원`\n보유 중인 주식: `%s주`\n남은 돈: `%s원`' % (name, code, format(int(price), ','), format(int(sellAmount), ','), format(int(price) * int(sellAmount), ','), format(amount, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
@@ -333,6 +341,7 @@ async def sellStock(ctx, content):
             await ctx.send(embed=discord.Embed(color=0xff0000, title=':warning: 오류', description='값을 입력하세요.\n형식: `%s주식 판매 <기업명/종목코드> <수량/전부>`' % config['prefix']))
 
 # Initialize
-corpList = pd.read_html('http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0][['회사명', '종목코드']]
+corpList = pd.read_html(
+    'http://kind.krx.co.kr/corpgeneral/corpList.do?method=download', header=0)[0][['회사명', '종목코드']]
 print('I\'m ready!\nToken: ' + config['token'])
 client.run(config['token'])

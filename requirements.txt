@@ -1,4 +1,4 @@
-aiohttp==3.7.4.post0
+aiohttp==3.7.4
 async-timeout==3.0.1
 attrs==20.3.0
 beautifulsoup4==4.9.3
@@ -18,5 +18,5 @@ requests==2.25.1
 six==1.15.0
 soupsieve==2.2.1
 typing-extensions==3.7.4.3
-urllib3==1.26.4
+urllib3==1.26.5
 yarl==1.6.3
