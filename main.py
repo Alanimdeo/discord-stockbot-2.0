@@ -41,15 +41,15 @@ def getNowPrice(name, df):
         day = datetime.today().day
         month = datetime.today().month
         if datetime.today().weekday() == 5:
-            day += -1
+            day -= 1
         elif datetime.today().weekday() == 6:
-            day += -2
+            day -= 2
         elif datetime.today().hour < 9:
             if datetime.today().weekday() == 0:
-                day += -2
-            day += -1
+                day -= 2
+            day -= 1
         if day < 1:
-            month += -1
+            month -= 1
             if month in [1, 3, 5, 7, 8, 10, 12]:
                 day = 31
             elif month in [4, 6, 9, 11]:
@@ -58,8 +58,12 @@ def getNowPrice(name, df):
                 day = 29
         if month == 0:
             month = 12
-            year += -1
+            year -= 1
             day = 31
+        if datetime(year, month, day).weekday() == 5:
+            day -= 1
+        elif datetime(year, month, day).weekday() == 6:
+            day -= 2
         now = str(year) + str(month).zfill(2) + str(day).zfill(2) + "235959"
         request = requests.get('https://finance.naver.com/item/sise_time.nhn?code=' + code + '&thistime=' + now, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'})
         soup = BeautifulSoup(request.text, 'html.parser')
@@ -70,7 +74,6 @@ def getNowPrice(name, df):
             price = int(str(price).replace('<span class="tah p11">','').replace('</span>', '').replace(',', ''))
         return name, code, price
 
-
 sendMoneyCommand = ['보내기', '송금', 'ㅅㄱ', 'tr', 'send']
 myStockCommand = ['내주식', '내', 'ㄵㅅ', 'ㄴㅈㅅ', 'ㄴ', 'swt', 's', 'my']
 sellStockCommand = ['판매', 'ㅍㅁ', 'sell', 'va']
@@ -80,6 +83,7 @@ checkLotteryCommand = ['확인', 'ㅎㅇ', 'gr', 'check']
 lotteryNumberCommand = ['번호', 'ㅂㅎ', 'qg', 'number']
 latestLotteryCommand = ['최신', '현재', 'ㅊㅅ', 'ㅎㅈ', 'ct', 'gw', 'now', 'latest']
 lotteryAutoCommand = ['자동', 'ㅈㄷ', 'auto', 'we']
+
 
 
 @client.command(aliases=['도움', '명령어', '커맨드', 'help', 'command', 'commands'])
@@ -117,7 +121,7 @@ async def 주식(ctx, *content):
             else:
                 await ctx.send(embed=discord.Embed(color=0x0090ff, title=":chart_with_upwards_trend: %s(%s)의 현재 주가" % (name, code), description="`%s원`" % format(int(price), ',')).set_image(url='https://ssl.pstatic.net/imgfinance/chart/item/area/day/%s.png?sidcode=%s' % (code, int(time.time() * 1000))).set_footer(text='차트 제공: 네이버 금융'))
     except IndexError:
-        await raiseError(ctx, '형식에 맞게 명령어를 입력하세요.\n주가 확인: `%s주식 [기업명]`\n내 주식 확인: `%s주식 내주식`\n구매: `%s주식 구매 [기업명] [수량]`\n판매: `%s주식 판매 [기업명] [수량]`' % (prefix, prefix, prefix))
+        await raiseError(ctx, '형식에 맞게 명령어를 입력하세요.\n주가 확인: `%s주식 [기업명]`\n내 주식 확인: `%s주식 내주식`\n구매: `%s주식 구매 [기업명] [수량]`\n판매: `%s주식 판매 [기업명] [수량]`' % (prefix, prefix, prefix, prefix))
 
 
 @client.command(aliases=['한강물', 'ㅎㄱ', 'ㅎㄱㅁ', 'gksrkd', 'gksrkdanf', 'gr', 'gra'])
@@ -137,7 +141,7 @@ async def 용돈(ctx):
         userdata[str(ctx.author.id)]['money'] += money
         await ctx.send(embed=discord.Embed(color=0x008000, title=':money_with_wings: 오늘의 용돈', description='오늘 용돈으로 `%s원`을 받았습니다.\n 현재 잔액: `%s원`' % (format(money, ','), format(userdata[str(ctx.author.id)]['money'], ','))))
         updateUserdata()
-        
+
 def findDrwNo():
     drwNo = (int(time.time()) - 1038582000) / 604800 # 회차
     nowtime = time.localtime(time.time())
@@ -161,8 +165,10 @@ async def 로또(ctx, *content):
             for lottery in userdata[str(ctx.author.id)]['lottery']:
                 if lottery['drwNo'] == currentDrwNo:
                     currentDrwAmount += 1
-            if currentDrwAmount == 100:
+            if currentDrwAmount == 5:
                 await ctx.send(embed=discord.Embed(color=0xffff00, title=':warning: 구매 한도 도달', description='회차당 최대 5게임까지 구매 가능합니다.\n\n한국도박문제 관리센터: :telephone: 1336'))
+            elif userdata[str(ctx.author.id)]['money'] < 1000:
+                await raiseError(ctx, '가진 돈이 없습니다.')
             else:
                 if content[1] in lotteryAutoCommand:
                     numbers = []
@@ -331,11 +337,11 @@ async def myStock(ctx, userID, df):
             if price == None:
                 willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 거래정지 상태)```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''))
             elif stockValue[i]['buyPrice'] > stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
+                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[%s원, -%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['buyPrice']) / float(stockValue[i]['amount'] * price) * 100 - 100, 2))
             elif stockValue[i]['buyPrice'] < stockValue[i]['amount'] * price:
-                willSendMessage += '```diff\n+ %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
+                willSendMessage += '```diff\n- %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[+%s원, +%s%%]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','), format(int(stockValue[i]['amount'] * price - stockValue[i]['buyPrice']), ','), round(float(stockValue[i]['amount'] * price) / float(stockValue[i]['buyPrice']) * 100 - 100, 2))
             else:
-                willSendMessage += '```yaml\n= %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','))
+                willSendMessage += '```\n* %s(%s): %s주 (평균 구매가 %s원, 현재 %s원)[=]```' % (name, code, format(int(stockValue[i]['amount']), ',').replace('.0', ''), format(math.floor(stockValue[i]['buyPrice'] / stockValue[i]['amount']), ',').replace('.0', ''), format(price, ','))
         await ctx.send(willSendMessage)
 
 
@@ -357,7 +363,7 @@ async def sendMoney(ctx, content):
 
 async def sendMoney2(ctx, content, targetUser):
     user = await ctx.message.guild.fetch_member(int(targetUser))
-    userdata[str(ctx.author.id)]['money'] += -int(content[2])
+    userdata[str(ctx.author.id)]['money'] -= int(content[2])
     userdata[targetUser]['money'] += int(content[2])
     updateUserdata()
     await ctx.send(embed=discord.Embed(color=0x008000, title=':white_check_mark: 송금 완료', description='%s 님께 송금을 완료했습니다.\n송금 후 잔액: `%s원`' % (user.display_name, userdata[str(ctx.author.id)]['money'])))
@@ -386,12 +392,10 @@ async def buyStock(ctx, content):
             elif userdata[str(ctx.author.id)]['money'] < buyPrice:
                 await ctx.send(embed=discord.Embed(color=0xffff00, title=':moneybag: 잔액 부족', description='가진 돈이 부족합니다.'))
             else:
-                userdata[str(ctx.author.id)]['money'] += -buyPrice
+                userdata[str(ctx.author.id)]['money'] -= buyPrice
                 userdata[str(ctx.author.id)]['stock'][code]['amount'] += int(buyAmount)
                 userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += buyPrice
                 success = True
-        except ValueError:
-            await raiseError(ctx, '수량에는 숫자 또는 전부만 입력하세요.\n형식: `%s주식 구매 <기업명/종목코드> <수량/전부>`' % config['prefix'])
         except KeyError:
             userdata[str(ctx.author.id)]['stock'][code] = {
                 'amount': int(buyAmount),
@@ -424,9 +428,8 @@ async def sellStock(ctx, content):
             elif int(sellAmount) <= 0:
                 await raiseError(ctx, '수량은 0보다 커야 합니다.')
             else:
-                userdata[str(ctx.author.id)]['stock'][code]['amount'] += -int(sellAmount)
-                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] += - \
-                    (int(sellAmount) * price)
+                userdata[str(ctx.author.id)]['stock'][code]['amount'] -= int(sellAmount)
+                userdata[str(ctx.author.id)]['stock'][code]['buyPrice'] -= int(sellAmount) * price
                 amount = userdata[str(ctx.author.id)]['stock'][code]['amount']
                 if userdata[str(ctx.author.id)]['stock'][code]['amount'] == 0:
                     del userdata[str(ctx.author.id)]['stock'][code]
